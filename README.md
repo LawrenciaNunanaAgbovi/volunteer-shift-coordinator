@@ -20,7 +20,7 @@ I built this to fix that specific gap.
 | Backend | Node.js + Express + TypeScript |
 | Database | PostgreSQL + Prisma ORM |
 | Real-time | Socket.io |
-| AI | OpenAI API (GPT-4o) |
+| AI | Claude API |
 | Auth | JWT + bcrypt |
 | Storage | AWS S3 |
 
@@ -30,33 +30,12 @@ I built this to fix that specific gap.
 - Node.js 18+
 - PostgreSQL 14+
 
-### Setup
-
-```bash
-git clone <repo-url>
-cd volunteer-coordinator
-
-# Backend
-cd backend
-cp .env.example .env        # fill in DATABASE_URL and JWT_SECRET
-npm install
-npm run db:migrate
-npm run dev
-
-# Frontend (separate terminal)
-cd frontend
-npm install
-npm run dev
-```
-
 ## Build Phases
 
-- [x] Phase 1 — Foundation: JWT auth, Prisma schema, User/Org/Shift CRUD
-- [ ] Phase 2 — Reservation system + waitlist auto-promotion
-- [ ] Phase 3 — Real-time headcount via Socket.io
-- [ ] Phase 4 — AI features: shift description generator + volunteer matcher
-- [ ] Phase 5 — Polish: email reminders, analytics dashboard, responsive design
+- Phase 1 — Foundation: JWT auth, Prisma schema, User/Org/Shift CRUD
+- Phase 2 — Reservation system + waitlist auto-promotion
+- Phase 3 — Real-time headcount via Socket.io
+- Phase 4 — AI features: shift description generator + volunteer matcher
+- Phase 5 — Polish: email reminders, analytics dashboard, responsive design
 
-## License
 
-MIT
