@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import { Role } from '@prisma/client';
 
 const SALT_ROUNDS = 10;
 
-const signToken = (id: string, role: Role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET as string, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  });
+const signToken = (id: string, role: Role): string => {
+  const options: SignOptions = {
+    expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn'],
+  };
+  return jwt.sign({ id, role }, process.env.JWT_SECRET as string, options) as string;
 };
 
 export const register = async (req: Request, res: Response) => {
