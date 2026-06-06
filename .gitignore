@@ -1,0 +1,22 @@
+node_modules/
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Build output
+frontend/dist/
+backend/dist/
