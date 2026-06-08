@@ -2,6 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
+import authRoutes from './routes/authRoutes';
+import orgRoutes from './routes/orgRoutes';
+import shiftRoutes from './routes/shiftRoutes';
+
 dotenv.config();
 
 const app = express();
@@ -14,7 +18,10 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// TODO: mount auth, org, and shift routes here (Phase 1)
+app.use('/api/auth', authRoutes);
+app.use('/api/orgs', orgRoutes);
+app.use('/api/shifts', shiftRoutes);
+
 // TODO: mount reservation routes here (Phase 2)
 // TODO: wire up Socket.io for live headcount (Phase 3)
 
