@@ -1,3 +1,4 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -5,10 +6,17 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import orgRoutes from './routes/orgRoutes';
 import shiftRoutes from './routes/shiftRoutes';
+import reservationRoutes from './routes/reservationRoutes';
+import { initSocket } from './lib/socket';
+import { registerShiftSocketHandlers } from './sockets/shiftSocket';
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = initSocket(server);
+registerShiftSocketHandlers(io);
+
 const PORT = process.env.PORT || 8000;
 
 app.use(cors());
@@ -21,11 +29,11 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/orgs', orgRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api', reservationRoutes);
 
-// TODO: mount reservation routes here (Phase 2)
-// TODO: wire up Socket.io for live headcount (Phase 3)
+// TODO: add Cloudinary upload endpoint (Phase 4)
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
