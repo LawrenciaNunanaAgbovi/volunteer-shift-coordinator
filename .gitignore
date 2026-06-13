@@ -20,3 +20,7 @@ coverage/
 # Build output
 frontend/dist/
 backend/dist/
+
+# Root-level lockfile (dependencies live in backend/)
+/package-lock.json
+/package.json
