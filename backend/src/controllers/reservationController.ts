@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import {
   createReservation,
+  cancelReservation,
   updateReservationStatus,
   getMyReservations,
   getShiftReservations,
@@ -53,6 +54,17 @@ export const reserveByBody = async (req: AuthenticatedRequest, res: Response) =>
   try {
     const reservation = await createReservation(shiftId, volunteerId, positionId);
     res.status(201).json(reservation);
+  } catch (err) {
+    handleServiceError(err, res);
+  }
+};
+
+export const cancel = async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await cancelReservation(id, req.user!.id);
+    res.status(204).send();
   } catch (err) {
     handleServiceError(err, res);
   }

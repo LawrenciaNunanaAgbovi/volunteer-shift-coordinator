@@ -134,6 +134,38 @@ const promoteFromWaitlist = async (
   });
 };
 
+export const cancelReservation = async (reservationId: string, volunteerId: string) => {
+  const deleted = await prisma.$transaction(async (tx) => {
+    const reservation = await tx.reservation.findUnique({ where: { id: reservationId } });
+    if (!reservation) throw new Error('RESERVATION_NOT_FOUND');
+    if (reservation.volunteer_id !== volunteerId) throw new Error('FORBIDDEN');
+
+    await tx.reservation.delete({ where: { id: reservationId } });
+
+    // Free up a spot — promote next waitlisted person
+    if (reservation.status === 'pending' || reservation.status === 'approved') {
+      await promoteFromWaitlist(tx, reservation.shift_id);
+    }
+
+    // Close the gap if they were on the waitlist
+    if (reservation.status === 'waitlisted' && reservation.waitlist_position != null) {
+      await tx.reservation.updateMany({
+        where: {
+          shift_id: reservation.shift_id,
+          status: 'waitlisted',
+          waitlist_position: { gt: reservation.waitlist_position },
+        },
+        data: { waitlist_position: { decrement: 1 } },
+      });
+    }
+
+    return reservation;
+  });
+
+  emitHeadcount(getIO(), deleted.shift_id).catch(() => {});
+  return deleted;
+};
+
 export const getMyReservations = async (volunteerId: string) => {
   return prisma.reservation.findMany({
     where: { volunteer_id: volunteerId },
