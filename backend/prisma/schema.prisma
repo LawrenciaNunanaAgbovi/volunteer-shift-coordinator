@@ -25,6 +25,18 @@ enum ReservationStatus {
   waitlisted
 }
 
+enum ShiftCategory {
+  food
+  education
+  environment
+  health
+  animals
+  arts
+  community
+  sports
+  other
+}
+
 model User {
   id                String        @id @default(uuid())
   name              String
@@ -52,29 +64,53 @@ model Organization {
 }
 
 model Shift {
-  id           String      @id @default(uuid())
-  org_id       String
-  title        String
-  description  String?
-  date         DateTime
-  location     String
-  capacity     Int
-  status       ShiftStatus @default(draft)
-  ai_generated Boolean     @default(false)
-  created_at   DateTime    @default(now())
+  id            String         @id @default(uuid())
+  org_id        String
+  title         String
+  description   String?
+  date          DateTime
+  start_time    String?        // "HH:MM" 24-hour
+  end_time      String?        // "HH:MM" 24-hour
+  duration      Int?           // minutes
+  location      String
+  capacity      Int            // total across all positions
+  category      ShiftCategory  @default(other)
+  requirements  String?
+  what_to_bring String?
+  is_recurring  Boolean        @default(false)
+  contact_name  String?
+  contact_email String?
+  status        ShiftStatus    @default(draft)
+  ai_generated  Boolean        @default(false)
+  created_at    DateTime       @default(now())
 
-  org          Organization  @relation(fields: [org_id], references: [id])
+  org          Organization    @relation(fields: [org_id], references: [id])
+  positions    ShiftPosition[]
+  reservations Reservation[]
+}
+
+model ShiftPosition {
+  id          String   @id @default(uuid())
+  shift_id    String
+  name        String
+  description String?
+  capacity    Int
+  created_at  DateTime @default(now())
+
+  shift        Shift         @relation(fields: [shift_id], references: [id], onDelete: Cascade)
   reservations Reservation[]
 }
 
 model Reservation {
-  id               String            @id @default(uuid())
-  shift_id         String
-  volunteer_id     String
-  status           ReservationStatus @default(pending)
+  id                String            @id @default(uuid())
+  shift_id          String
+  position_id       String?
+  volunteer_id      String
+  status            ReservationStatus @default(pending)
   waitlist_position Int?
-  created_at       DateTime          @default(now())
+  created_at        DateTime          @default(now())
 
-  shift     Shift @relation(fields: [shift_id], references: [id])
-  volunteer User  @relation(fields: [volunteer_id], references: [id])
+  shift     Shift          @relation(fields: [shift_id], references: [id])
+  position  ShiftPosition? @relation(fields: [position_id], references: [id])
+  volunteer User           @relation(fields: [volunteer_id], references: [id])
 }

@@ -2,13 +2,15 @@ import prisma from '../lib/prisma';
 import { getIO } from '../lib/socket';
 import { emitHeadcount } from '../sockets/shiftSocket';
 
-// Statuses that count against a shift's capacity
 const ACTIVE_STATUSES = ['pending', 'approved'] as const;
 
-export const createReservation = async (shiftId: string, volunteerId: string) => {
+export const createReservation = async (
+  shiftId: string,
+  volunteerId: string,
+  positionId?: string | null,
+) => {
   const result = await prisma.$transaction(async (tx) => {
     const shift = await tx.shift.findUnique({ where: { id: shiftId } });
-
     if (!shift) throw new Error('SHIFT_NOT_FOUND');
     if (shift.status !== 'open') throw new Error('SHIFT_NOT_OPEN');
 
@@ -17,24 +19,53 @@ export const createReservation = async (shiftId: string, volunteerId: string) =>
     });
     if (alreadyReserved) throw new Error('ALREADY_RESERVED');
 
-    // Count inside the transaction so two concurrent requests can't both
-    // pass this check and exceed capacity (the race condition naive implementations miss)
+    // If a specific position was requested, check that position's capacity
+    if (positionId) {
+      const position = await tx.shiftPosition.findUnique({ where: { id: positionId } });
+      if (!position || position.shift_id !== shiftId) throw new Error('POSITION_NOT_FOUND');
+
+      const positionCount = await tx.reservation.count({
+        where: { position_id: positionId, status: { in: [...ACTIVE_STATUSES] } },
+      });
+
+      if (positionCount >= position.capacity) {
+        // Position is full — add to shift-level waitlist (no position assigned)
+        const lastWaitlisted = await tx.reservation.findFirst({
+          where: { shift_id: shiftId, status: 'waitlisted' },
+          orderBy: { waitlist_position: 'desc' },
+        });
+        return tx.reservation.create({
+          data: {
+            shift_id: shiftId,
+            volunteer_id: volunteerId,
+            status: 'waitlisted',
+            waitlist_position: (lastWaitlisted?.waitlist_position ?? 0) + 1,
+          },
+        });
+      }
+
+      return tx.reservation.create({
+        data: { shift_id: shiftId, volunteer_id: volunteerId, position_id: positionId, status: 'pending' },
+      });
+    }
+
+    // No position — fall back to shift-level capacity check
     const activeCount = await tx.reservation.count({
       where: { shift_id: shiftId, status: { in: [...ACTIVE_STATUSES] } },
     });
 
-    const isFull = activeCount >= shift.capacity;
-
-    if (isFull) {
+    if (activeCount >= shift.capacity) {
       const lastWaitlisted = await tx.reservation.findFirst({
         where: { shift_id: shiftId, status: 'waitlisted' },
         orderBy: { waitlist_position: 'desc' },
       });
-
-      const waitlistPosition = (lastWaitlisted?.waitlist_position ?? 0) + 1;
-
       return tx.reservation.create({
-        data: { shift_id: shiftId, volunteer_id: volunteerId, status: 'waitlisted', waitlist_position: waitlistPosition },
+        data: {
+          shift_id: shiftId,
+          volunteer_id: volunteerId,
+          status: 'waitlisted',
+          waitlist_position: (lastWaitlisted?.waitlist_position ?? 0) + 1,
+        },
       });
     }
 
@@ -50,7 +81,7 @@ export const createReservation = async (shiftId: string, volunteerId: string) =>
 export const updateReservationStatus = async (
   reservationId: string,
   newStatus: 'approved' | 'denied',
-  adminUserId: string
+  adminUserId: string,
 ) => {
   const result = await prisma.$transaction(async (tx) => {
     const reservation = await tx.reservation.findUnique({
@@ -66,7 +97,6 @@ export const updateReservationStatus = async (
       data: { status: newStatus, waitlist_position: null },
     });
 
-    // When a spot opens up, promote the next person off the waitlist
     if (newStatus === 'denied') {
       await promoteFromWaitlist(tx, reservation.shift_id);
     }
@@ -78,11 +108,9 @@ export const updateReservationStatus = async (
   return result;
 };
 
-// Promotes the next waitlisted volunteer to pending when a spot opens.
-// Uses the same transaction so the promotion is atomic with the denial.
 const promoteFromWaitlist = async (
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  shiftId: string
+  shiftId: string,
 ) => {
   const next = await tx.reservation.findFirst({
     where: { shift_id: shiftId, status: 'waitlisted' },
@@ -96,9 +124,12 @@ const promoteFromWaitlist = async (
     data: { status: 'pending', waitlist_position: null },
   });
 
-  // Close the gap left in waitlist positions
   await tx.reservation.updateMany({
-    where: { shift_id: shiftId, status: 'waitlisted', waitlist_position: { gt: next.waitlist_position! } },
+    where: {
+      shift_id: shiftId,
+      status: 'waitlisted',
+      waitlist_position: { gt: next.waitlist_position! },
+    },
     data: { waitlist_position: { decrement: 1 } },
   });
 };
@@ -108,8 +139,9 @@ export const getMyReservations = async (volunteerId: string) => {
     where: { volunteer_id: volunteerId },
     include: {
       shift: {
-        include: { org: { select: { name: true, cause_area: true } } },
+        include: { org: { select: { name: true, cause_area: true, logo_url: true } } },
       },
+      position: { select: { id: true, name: true } },
     },
     orderBy: { created_at: 'desc' },
   });
@@ -128,6 +160,7 @@ export const getShiftReservations = async (shiftId: string, adminUserId: string)
     where: { shift_id: shiftId },
     include: {
       volunteer: { select: { id: true, name: true, email: true, skills: true } },
+      position: { select: { id: true, name: true } },
     },
     orderBy: [{ status: 'asc' }, { created_at: 'asc' }],
   });
