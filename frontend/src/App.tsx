@@ -4,6 +4,7 @@ import VolunteerDashboard from './pages/volunteer/VolunteerDashboard'
 import BrowseShifts from './pages/volunteer/BrowseShifts'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import CreateShift from './pages/admin/CreateShift'
+import ShiftDetail from './pages/volunteer/ShiftDetail'
 import ManageShifts from './pages/admin/ManageShifts'
 import EditShift from './pages/admin/EditShift'
 import ShiftReservations from './pages/admin/ShiftReservations'
@@ -29,6 +30,15 @@ function App() {
           element={
             <ProtectedRoute role="volunteer">
               <BrowseShifts />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/shifts/:id"
+          element={
+            <ProtectedRoute role="volunteer">
+              <ShiftDetail />
             </ProtectedRoute>
           }
         />
