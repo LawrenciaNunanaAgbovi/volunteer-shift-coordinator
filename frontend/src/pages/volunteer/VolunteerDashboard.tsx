@@ -53,7 +53,6 @@ export default function VolunteerDashboard() {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [shifts, setShifts]             = useState<Shift[]>([])
   const [loading, setLoading]           = useState(true)
-  const [reserving, setReserving]       = useState<string | null>(null)
   const [cancelling, setCancelling]     = useState<string | null>(null)
 
   useEffect(() => {
@@ -77,18 +76,6 @@ export default function VolunteerDashboard() {
       // silent
     } finally {
       setCancelling(null)
-    }
-  }
-
-  const reserve = async (shiftId: string) => {
-    setReserving(shiftId)
-    try {
-      const { data } = await api.post<Reservation>('/api/reservations', { shift_id: shiftId })
-      setReservations(prev => [...prev, data])
-    } catch {
-      // error handled silently — user stays on page
-    } finally {
-      setReserving(null)
     }
   }
 
@@ -253,15 +240,9 @@ export default function VolunteerDashboard() {
                       >
                         {isFull ? 'Waitlist open' : `${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left`}
                       </span>
-                      <button
-                        onClick={() => reserve(shift.id)}
-                        disabled={reserving === shift.id}
-                        className={styles.reserveBtn}
-                      >
-                        {reserving === shift.id
-                          ? '...'
-                          : isFull ? 'Join Waitlist' : 'Reserve'}
-                      </button>
+                      <Link to={`/shifts/${shift.id}`} className={styles.reserveBtn}>
+                        {isFull ? 'Join Waitlist' : 'Reserve'}
+                      </Link>
                     </div>
                   </div>
                 )

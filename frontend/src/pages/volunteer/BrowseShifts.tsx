@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../../lib/api'
 import Navbar from '../../components/Navbar'
 import styles from './BrowseShifts.module.css'
@@ -92,7 +93,6 @@ export default function BrowseShifts() {
   const [shifts, setShifts]           = useState<Shift[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading]         = useState(true)
-  const [reserving, setReserving]     = useState<string | null>(null)
   const [cancelling, setCancelling]   = useState<string | null>(null)
   const [search, setSearch]           = useState('')
   const [category, setCategory]       = useState('all')
@@ -129,22 +129,6 @@ export default function BrowseShifts() {
       // silent
     } finally {
       setCancelling(null)
-    }
-  }
-
-  const reserve = async (shiftId: string, positionId?: string) => {
-    const key = positionId ? `${shiftId}:${positionId}` : shiftId
-    setReserving(key)
-    try {
-      const { data } = await api.post<Reservation>('/api/reservations', {
-        shift_id: shiftId,
-        ...(positionId && { position_id: positionId }),
-      })
-      setReservations(prev => [...prev, data])
-    } catch {
-      // silent — user stays on page
-    } finally {
-      setReserving(null)
     }
   }
 
@@ -251,34 +235,12 @@ export default function BrowseShifts() {
                   {/* Org + title */}
                   {shift.org && <p className={styles.orgName}>{shift.org.name}</p>}
                   <h3 className={styles.shiftTitle}>{shift.title}</h3>
-                  {shift.description && (
-                    <p className={styles.description}>{shift.description}</p>
-                  )}
-
                   {/* Meta */}
                   <div className={styles.meta}>
                     <span>📅 {fmtDate(shift.date)}</span>
-                    {(shift.start_time || shift.end_time) && (
-                      <span>🕐 {fmtTime(shift.start_time)} – {fmtTime(shift.end_time)}</span>
-                    )}
+                    <span>🕐 {fmtTime(shift.start_time)} – {fmtTime(shift.end_time)}</span>
                     <span>📍 {shift.location}</span>
                   </div>
-
-                  {/* Requirements / what to bring */}
-                  {(shift.requirements || shift.what_to_bring) && (
-                    <div className={styles.extras}>
-                      {shift.requirements && (
-                        <p className={styles.extraItem}>
-                          <span className={styles.extraLabel}>Requirements:</span> {shift.requirements}
-                        </p>
-                      )}
-                      {shift.what_to_bring && (
-                        <p className={styles.extraItem}>
-                          <span className={styles.extraLabel}>Bring:</span> {shift.what_to_bring}
-                        </p>
-                      )}
-                    </div>
-                  )}
 
                   {/* Positions or simple reserve */}
                   <div className={styles.cardFooter}>
@@ -287,12 +249,9 @@ export default function BrowseShifts() {
                         <p className={styles.positionsLabel}>Volunteer roles</p>
                         {shift.positions.map(pos => {
                           const posRes         = reservationByPosition.get(pos.id)
-                          const shiftAlreadyRes = isReserved && !pos.id
                           const posReserved    = !!posRes || (isReserved && !shiftRes?.position)
                           const posSpots       = pos.capacity - pos._count.reservations
                           const posFull        = posSpots <= 0
-                          const posKey         = `${shift.id}:${pos.id}`
-                          const isLoading      = reserving === posKey
 
                           return (
                             <div key={pos.id} className={styles.positionRow}>
@@ -309,7 +268,7 @@ export default function BrowseShifts() {
                                 >
                                   {posFull ? 'Full' : `${posSpots} left`}
                                 </span>
-                                {posReserved || shiftAlreadyRes ? (
+                                {posReserved ? (
                                   <div className={styles.statusGroup}>
                                     <span className={styles.reservedTag}>
                                       {posRes?.status === 'waitlisted' ? `#${posRes.waitlist_position} Waitlist` : '✓ Reserved'}
@@ -325,13 +284,9 @@ export default function BrowseShifts() {
                                     )}
                                   </div>
                                 ) : (
-                                  <button
-                                    onClick={() => reserve(shift.id, pos.id)}
-                                    disabled={isLoading}
-                                    className={styles.reserveBtn}
-                                  >
-                                    {isLoading ? '…' : posFull ? 'Waitlist' : 'Reserve'}
-                                  </button>
+                                  <Link to={`/shifts/${shift.id}`} className={styles.reserveBtn}>
+                                    {posFull ? 'Waitlist' : 'Reserve'}
+                                  </Link>
                                 )}
                               </div>
                             </div>
@@ -362,28 +317,13 @@ export default function BrowseShifts() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => reserve(shift.id)}
-                            disabled={reserving === shift.id}
-                            className={styles.reserveBtn}
-                          >
-                            {reserving === shift.id ? '…' : isFull ? 'Join Waitlist' : 'Reserve'}
-                          </button>
+                          <Link to={`/shifts/${shift.id}`} className={styles.reserveBtn}>
+                            {isFull ? 'Join Waitlist' : 'Reserve'}
+                          </Link>
                         )}
                       </div>
                     )}
                   </div>
-
-                  {/* Contact */}
-                  {(shift.contact_name || shift.contact_email) && (
-                    <div className={styles.contact}>
-                      <span className={styles.contactLabel}>Contact:</span>{' '}
-                      {shift.contact_name}
-                      {shift.contact_email && (
-                        <> · <a href={`mailto:${shift.contact_email}`} className={styles.contactLink}>{shift.contact_email}</a></>
-                      )}
-                    </div>
-                  )}
 
                 </div>
               )
