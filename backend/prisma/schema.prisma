@@ -71,13 +71,14 @@ model Shift {
   date          DateTime
   start_time    String?        // "HH:MM" 24-hour
   end_time      String?        // "HH:MM" 24-hour
-  duration      Int?           // minutes
+  duration      String?
   location      String
   capacity      Int            // total across all positions
   category      ShiftCategory  @default(other)
   requirements  String?
   what_to_bring String?
-  is_recurring  Boolean        @default(false)
+  is_recurring    Boolean        @default(false)
+  recurrence_note String?
   contact_name  String?
   contact_email String?
   status        ShiftStatus    @default(draft)
