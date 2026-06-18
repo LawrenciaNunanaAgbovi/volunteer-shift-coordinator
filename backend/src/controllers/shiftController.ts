@@ -20,7 +20,7 @@ export const createShift = async (req: AuthenticatedRequest, res: Response) => {
     title, description, date, location, capacity,
     start_time, end_time, duration,
     requirements, what_to_bring, category,
-    is_recurring, contact_name, contact_email,
+    is_recurring, recurrence_note, contact_name, contact_email,
     positions,
   } = req.body;
 
@@ -46,11 +46,12 @@ export const createShift = async (req: AuthenticatedRequest, res: Response) => {
         capacity: parseInt(capacity),
         start_time: start_time ?? null,
         end_time: end_time ?? null,
-        duration: duration != null ? parseInt(duration) : null,
+        duration: duration ?? null,
         requirements: requirements ?? null,
         what_to_bring: what_to_bring ?? null,
         category: (category as ShiftCategory) ?? 'other',
         is_recurring: Boolean(is_recurring),
+        recurrence_note: recurrence_note ?? null,
         contact_name: contact_name ?? null,
         contact_email: contact_email ?? null,
         status: 'draft',
@@ -134,7 +135,7 @@ export const updateShift = async (req: AuthenticatedRequest, res: Response) => {
     title, description, date, location, capacity,
     start_time, end_time, duration,
     requirements, what_to_bring, category,
-    is_recurring, contact_name, contact_email,
+    is_recurring, recurrence_note, contact_name, contact_email,
   } = req.body;
 
   try {
@@ -154,11 +155,12 @@ export const updateShift = async (req: AuthenticatedRequest, res: Response) => {
         ...(capacity && { capacity: parseInt(capacity) }),
         ...(start_time !== undefined && { start_time }),
         ...(end_time !== undefined && { end_time }),
-        ...(duration !== undefined && { duration: duration != null ? parseInt(duration) : null }),
+        ...(duration !== undefined && { duration: duration ?? null }),
         ...(requirements !== undefined && { requirements }),
         ...(what_to_bring !== undefined && { what_to_bring }),
         ...(category && { category: category as ShiftCategory }),
         ...(is_recurring !== undefined && { is_recurring: Boolean(is_recurring) }),
+        ...(recurrence_note !== undefined && { recurrence_note: recurrence_note ?? null }),
         ...(contact_name !== undefined && { contact_name }),
         ...(contact_email !== undefined && { contact_email }),
       },

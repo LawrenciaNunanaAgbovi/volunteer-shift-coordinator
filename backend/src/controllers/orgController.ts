@@ -30,6 +30,45 @@ export const createOrg = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+export const getMyOrgDashboard = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { admin_user_id: req.user!.id },
+    });
+
+    if (!org) {
+      res.status(404).json({ message: 'No organization found for this account' });
+      return;
+    }
+
+    const shifts = await prisma.shift.findMany({
+      where: { org_id: org.id },
+      include: {
+        positions: { include: { _count: { select: { reservations: true } } } },
+        _count: { select: { reservations: true } },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    const pendingReservations = await prisma.reservation.findMany({
+      where: {
+        status: 'pending',
+        shift: { org_id: org.id },
+      },
+      include: {
+        volunteer: { select: { id: true, name: true, email: true } },
+        shift:     { select: { id: true, title: true, date: true, start_time: true } },
+        position:  { select: { id: true, name: true } },
+      },
+      orderBy: { created_at: 'asc' },
+    });
+
+    res.json({ org, shifts, pendingReservations });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to load dashboard', error: err });
+  }
+};
+
 export const getAllOrgs = async (_req: AuthenticatedRequest, res: Response) => {
   try {
     const orgs = await prisma.organization.findMany({
