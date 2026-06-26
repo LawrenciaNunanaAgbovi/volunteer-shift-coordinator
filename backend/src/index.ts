@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes';
 import orgRoutes from './routes/orgRoutes';
 import shiftRoutes from './routes/shiftRoutes';
 import reservationRoutes from './routes/reservationRoutes';
+import userRoutes from './routes/userRoutes';
 import { initSocket } from './lib/socket';
 import { registerShiftSocketHandlers } from './sockets/shiftSocket';
 
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orgs', orgRoutes);
 app.use('/api/shifts', shiftRoutes);
 app.use('/api', reservationRoutes);
+app.use('/api/users', userRoutes);
 
 // TODO: add Cloudinary upload endpoint (Phase 4)
 
