@@ -52,8 +52,17 @@ export default function Navbar() {
         </div>
 
         <div className={styles.user}>
-          <div className={styles.avatar}>{name.charAt(0).toUpperCase()}</div>
-          <span className={styles.userName}>{name}</span>
+          {role === 'volunteer' ? (
+            <Link to="/profile" className={styles.profileLink}>
+              <div className={styles.avatar}>{name.charAt(0).toUpperCase()}</div>
+              <span className={styles.userName}>{name}</span>
+            </Link>
+          ) : (
+            <>
+              <div className={styles.avatar}>{name.charAt(0).toUpperCase()}</div>
+              <span className={styles.userName}>{name}</span>
+            </>
+          )}
           <button onClick={logout} className={styles.logoutBtn}>Sign out</button>
         </div>
       </div>

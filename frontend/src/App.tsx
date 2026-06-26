@@ -6,6 +6,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import CreateShift from './pages/admin/CreateShift'
 import ShiftDetail from './pages/volunteer/ShiftDetail'
 import MyReservations from './pages/volunteer/MyReservations'
+import Profile from './pages/volunteer/Profile'
 import ManageShifts from './pages/admin/ManageShifts'
 import EditShift from './pages/admin/EditShift'
 import ShiftReservations from './pages/admin/ShiftReservations'
@@ -94,6 +95,15 @@ function App() {
           element={
             <ProtectedRoute role="volunteer">
               <MyReservations />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute role="volunteer">
+              <Profile />
             </ProtectedRoute>
           }
         />
