@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -7,9 +8,12 @@ interface Props {
   value: string
   onChange: (html: string) => void
   placeholder?: string
+  externalContent?: string
 }
 
-export default function RichTextEditor({ value, onChange, placeholder }: Props) {
+export default function RichTextEditor({ value, onChange, placeholder, externalContent }: Props) {
+  const lastExternal = useRef<string | undefined>(undefined)
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -20,6 +24,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
       onChange(editor.isEmpty ? '' : editor.getHTML())
     },
   })
+
+  useEffect(() => {
+    if (!editor || externalContent === undefined) return
+    if (externalContent !== lastExternal.current) {
+      lastExternal.current = externalContent
+      editor.commands.setContent(externalContent)
+      onChange(externalContent)
+    }
+  }, [editor, externalContent])
 
   if (!editor) return null
 

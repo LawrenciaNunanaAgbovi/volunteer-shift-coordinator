@@ -80,6 +80,8 @@ interface ShiftResponse {
   positions: ExistingPosition[]
 }
 
+interface AiContent { description: string; requirements: string; what_to_bring: string }
+
 export default function EditShift() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -89,6 +91,30 @@ export default function EditShift() {
   const [loading, setLoading]                     = useState(true)
   const [error, setError]                         = useState('')
   const [submitting, setSubmitting]               = useState(false)
+  const [aiNotes, setAiNotes]                     = useState('')
+  const [aiGenerating, setAiGenerating]           = useState(false)
+  const [aiContent, setAiContent]                 = useState<AiContent | null>(null)
+
+  const generateWithAI = async () => {
+    if (!form.title.trim()) { setError('Add a shift title first so AI has context.'); return }
+    setError('')
+    setAiGenerating(true)
+    try {
+      const { data } = await api.post<AiContent>('/api/ai/generate-description', {
+        title:       form.title.trim(),
+        category:    form.category,
+        location:    form.location.trim() || undefined,
+        date:        form.date || undefined,
+        extra_notes: aiNotes.trim() || undefined,
+      })
+      setAiContent(data)
+      setForm(prev => ({ ...prev, description: data.description, requirements: data.requirements, what_to_bring: data.what_to_bring }))
+    } catch {
+      setError('AI generation failed. Please try again.')
+    } finally {
+      setAiGenerating(false)
+    }
+  }
 
   useEffect(() => {
     if (!id) return
@@ -224,10 +250,30 @@ export default function EditShift() {
 
             <div className={styles.field}>
               <label className={styles.label}>Description</label>
+              <div className={styles.aiBar}>
+                <span className={styles.aiLabel}>✨ Generate with AI</span>
+                <input
+                  className={styles.aiInput}
+                  placeholder="Optional keywords (e.g. outdoor, bilingual, heavy lifting…)"
+                  value={aiNotes}
+                  onChange={e => setAiNotes(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && generateWithAI()}
+                  disabled={aiGenerating}
+                />
+                <button
+                  type="button"
+                  className={styles.aiBtn}
+                  onClick={generateWithAI}
+                  disabled={aiGenerating}
+                >
+                  {aiGenerating ? 'Generating…' : 'Generate'}
+                </button>
+              </div>
               <RichTextEditor
                 value={form.description}
                 onChange={v => set('description', v)}
                 placeholder="What will volunteers be doing? Give a friendly overview."
+                externalContent={aiContent?.description}
               />
             </div>
 
@@ -356,6 +402,7 @@ export default function EditShift() {
                   value={form.requirements}
                   onChange={v => set('requirements', v)}
                   placeholder="Age restrictions, physical demands, certifications needed…"
+                  externalContent={aiContent?.requirements}
                 />
               </div>
               <div className={styles.field}>
@@ -364,6 +411,7 @@ export default function EditShift() {
                   value={form.what_to_bring}
                   onChange={v => set('what_to_bring', v)}
                   placeholder="Closed-toe shoes, gloves, ID card…"
+                  externalContent={aiContent?.what_to_bring}
                 />
               </div>
             </div>
