@@ -81,6 +81,10 @@ interface Shift {
   _count: { reservations: number }
 }
 
+interface RecommendedShift extends Shift {
+  reason: string
+}
+
 interface Reservation {
   id: string
   status: 'pending' | 'approved' | 'waitlisted'
@@ -90,13 +94,15 @@ interface Reservation {
 }
 
 export default function BrowseShifts() {
-  const [shifts, setShifts]           = useState<Shift[]>([])
+  const [shifts, setShifts]             = useState<Shift[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [cancelling, setCancelling]   = useState<string | null>(null)
-  const [search, setSearch]           = useState('')
-  const [category, setCategory]       = useState('all')
-  const [dateFilter, setDateFilter]   = useState('')
+  const [loading, setLoading]           = useState(true)
+  const [cancelling, setCancelling]     = useState<string | null>(null)
+  const [search, setSearch]             = useState('')
+  const [category, setCategory]         = useState('all')
+  const [dateFilter, setDateFilter]     = useState('')
+  const [recs, setRecs]                 = useState<RecommendedShift[]>([])
+  const [recsLoading, setRecsLoading]   = useState(true)
 
   useEffect(() => {
     Promise.all([
@@ -108,6 +114,13 @@ export default function BrowseShifts() {
         setReservations(resRes.data)
       })
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    api.get<RecommendedShift[]>('/api/ai/recommendations')
+      .then(r => setRecs(r.data))
+      .catch(() => setRecs([]))
+      .finally(() => setRecsLoading(false))
   }, [])
 
   // Quick lookup maps for reservation state
@@ -168,6 +181,43 @@ export default function BrowseShifts() {
             </p>
           </div>
         </div>
+
+        {/* AI Recommendations */}
+        {(recsLoading || recs.length > 0) && (
+          <div className={styles.recSection}>
+            <div className={styles.recHeader}>
+              <span className={styles.recTitle}>✨ Recommended for you</span>
+              <span className={styles.recSub}>Based on your skills and past shifts</span>
+            </div>
+            {recsLoading ? (
+              <p className={styles.recLoading}>Finding your best matches…</p>
+            ) : (
+              <div className={styles.recStrip}>
+                {recs.map(shift => (
+                  <Link key={shift.id} to={`/shifts/${shift.id}`} className={styles.recCard}>
+                    <span
+                      className={styles.catBadge}
+                      style={{
+                        background: CATEGORY_COLORS[shift.category] ?? CATEGORY_COLORS.other,
+                        color: CATEGORY_TEXT[shift.category] ?? CATEGORY_TEXT.other,
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      {CATEGORIES.find(c => c.value === shift.category)?.emoji} {CATEGORIES.find(c => c.value === shift.category)?.label ?? shift.category}
+                    </span>
+                    {shift.org && <p className={styles.recCardOrg}>{shift.org.name}</p>}
+                    <p className={styles.recCardTitle}>{shift.title}</p>
+                    <div className={styles.recCardMeta}>
+                      <span>📅 {fmtDate(shift.date)}</span>
+                      <span>📍 {shift.location}</span>
+                    </div>
+                    <p className={styles.recReason}>✦ {shift.reason}</p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filters */}
         <div className={styles.filterBar}>
