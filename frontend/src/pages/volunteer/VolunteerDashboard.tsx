@@ -58,11 +58,11 @@ export default function VolunteerDashboard() {
   useEffect(() => {
     Promise.all([
       api.get<Reservation[]>('/api/reservations/my'),
-      api.get<Shift[]>('/api/shifts'),
+      api.get<{ data: Shift[] }>('/api/shifts'),
     ])
       .then(([resRes, shiftRes]) => {
         setReservations(resRes.data)
-        setShifts(shiftRes.data)
+        setShifts(shiftRes.data.data)
       })
       .finally(() => setLoading(false))
   }, [])

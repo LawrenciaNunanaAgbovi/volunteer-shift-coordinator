@@ -106,11 +106,11 @@ export default function BrowseShifts() {
 
   useEffect(() => {
     Promise.all([
-      api.get<Shift[]>('/api/shifts'),
+      api.get<{ data: Shift[] }>('/api/shifts'),
       api.get<Reservation[]>('/api/reservations/my'),
     ])
       .then(([shiftRes, resRes]) => {
-        setShifts(shiftRes.data)
+        setShifts(shiftRes.data.data)
         setReservations(resRes.data)
       })
       .finally(() => setLoading(false))

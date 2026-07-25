@@ -81,26 +81,39 @@ export const createShift = async (req: AuthenticatedRequest, res: Response) => {
 export const getAllShifts = async (req: AuthenticatedRequest, res: Response) => {
   const { date, location, cause_area, category } = req.query;
 
-  try {
-    const shifts = await prisma.shift.findMany({
-      where: {
-        status: 'open',
-        ...(location && { location: { contains: location as string, mode: 'insensitive' } }),
-        ...(date && { date: { gte: new Date(date as string) } }),
-        ...(cause_area && {
-          org: { cause_area: { contains: cause_area as string, mode: 'insensitive' } },
-        }),
-        ...(category && { category: category as ShiftCategory }),
-      },
-      include: {
-        org: { select: ORG_SELECT },
-        positions: POSITION_INCLUDE,
-        _count: { select: { reservations: true } },
-      },
-      orderBy: { date: 'asc' },
-    });
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
 
-    res.json(shifts);
+  try {
+    const where = {
+      status: 'open' as const,
+      ...(location && { location: { contains: location as string, mode: 'insensitive' as const } }),
+      ...(date && { date: { gte: new Date(date as string) } }),
+      ...(cause_area && {
+        org: { cause_area: { contains: cause_area as string, mode: 'insensitive' as const } },
+      }),
+      ...(category && { category: category as ShiftCategory }),
+    };
+
+    const [shifts, total] = await Promise.all([
+      prisma.shift.findMany({
+        where,
+        include: {
+          org: { select: ORG_SELECT },
+          positions: POSITION_INCLUDE,
+          _count: { select: { reservations: true } },
+        },
+        orderBy: { date: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.shift.count({ where }),
+    ]);
+
+    res.json({
+      data: shifts,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch shifts' });
