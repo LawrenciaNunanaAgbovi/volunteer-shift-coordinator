@@ -73,7 +73,8 @@ export const createShift = async (req: AuthenticatedRequest, res: Response) => {
 
     res.status(201).json(shift);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to create shift', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to create shift' });
   }
 };
 
@@ -101,7 +102,8 @@ export const getAllShifts = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json(shifts);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch shifts', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch shifts' });
   }
 };
 
@@ -125,7 +127,8 @@ export const getShiftById = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json(shift);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch shift', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch shift' });
   }
 };
 
@@ -172,7 +175,8 @@ export const updateShift = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update shift', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update shift' });
   }
 };
 
@@ -195,7 +199,8 @@ export const updateShiftStatus = async (req: AuthenticatedRequest, res: Response
     const updated = await prisma.shift.update({ where: { id }, data: { status } });
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update shift status', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update shift status' });
   }
 };
 
@@ -212,7 +217,8 @@ export const deleteShift = async (req: AuthenticatedRequest, res: Response) => {
     await prisma.shift.delete({ where: { id } });
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ message: 'Failed to delete shift', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete shift' });
   }
 };
 
@@ -251,7 +257,8 @@ export const addPosition = async (req: AuthenticatedRequest, res: Response) => {
 
     res.status(201).json(position);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to add position', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to add position' });
   }
 };
 
@@ -274,7 +281,8 @@ export const updatePosition = async (req: AuthenticatedRequest, res: Response) =
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update position', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update position' });
   }
 };
 
@@ -288,6 +296,7 @@ export const removePosition = async (req: AuthenticatedRequest, res: Response) =
     await prisma.shiftPosition.delete({ where: { id: posId } });
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ message: 'Failed to remove position', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to remove position' });
   }
 };

@@ -41,7 +41,8 @@ export const generateDescription = async (req: AuthenticatedRequest, res: Respon
     const result = JSON.parse(jsonMatch[0])
     res.json(result)
   } catch (err) {
-    res.status(500).json({ message: 'Failed to generate description', error: err })
+    console.error(err);
+    res.status(500).json({ message: 'Failed to generate description' })
   }
 }
 
@@ -131,6 +132,7 @@ export const getRecommendations = async (req: AuthenticatedRequest, res: Respons
 
     res.json(result)
   } catch (err) {
-    res.status(500).json({ message: 'Failed to get recommendations', error: err })
+    console.error(err);
+    res.status(500).json({ message: 'Failed to get recommendations' })
   }
 }

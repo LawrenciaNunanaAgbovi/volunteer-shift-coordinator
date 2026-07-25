@@ -23,7 +23,8 @@ const handleServiceError = (err: unknown, res: Response) => {
     res.status(status).json({ message });
     return;
   }
-  res.status(500).json({ message: 'Something went wrong', error: err });
+  console.error(err);
+  res.status(500).json({ message: 'Something went wrong' });
 };
 
 // POST /api/shifts/:shiftId/reservations  (param-based)
@@ -93,7 +94,8 @@ export const myReservations = async (req: AuthenticatedRequest, res: Response) =
     const reservations = await getMyReservations(req.user!.id);
     res.json(reservations);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch reservations', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch reservations' });
   }
 };
 

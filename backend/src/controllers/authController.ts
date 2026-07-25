@@ -53,7 +53,8 @@ export const register = async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
-    res.status(500).json({ message: 'Registration failed', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Registration failed' });
   }
 };
 
@@ -85,6 +86,7 @@ export const login = async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
-    res.status(500).json({ message: 'Login failed', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Login failed' });
   }
 };

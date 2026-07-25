@@ -19,7 +19,8 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
     if (!user) { res.status(404).json({ message: 'User not found' }); return }
     res.json(user)
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch profile', error: err })
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch profile' })
   }
 }
 
@@ -44,6 +45,7 @@ export const updateMe = async (req: AuthenticatedRequest, res: Response) => {
     })
     res.json(updated)
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update profile', error: err })
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update profile' })
   }
 }

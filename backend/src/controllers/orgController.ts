@@ -26,7 +26,8 @@ export const createOrg = async (req: AuthenticatedRequest, res: Response) => {
 
     res.status(201).json(org);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to create organization', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to create organization' });
   }
 };
 
@@ -65,7 +66,8 @@ export const getMyOrgDashboard = async (req: AuthenticatedRequest, res: Response
 
     res.json({ org, shifts, pendingReservations });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to load dashboard', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load dashboard' });
   }
 };
 
@@ -82,7 +84,8 @@ export const getAllOrgs = async (_req: AuthenticatedRequest, res: Response) => {
     });
     res.json(orgs);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch organizations', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch organizations' });
   }
 };
 
@@ -107,7 +110,8 @@ export const getOrgById = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json(org);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch organization', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch organization' });
   }
 };
 
@@ -135,7 +139,8 @@ export const updateOrg = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update organization', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update organization' });
   }
 };
 
@@ -158,6 +163,7 @@ export const deleteOrg = async (req: AuthenticatedRequest, res: Response) => {
     await prisma.organization.delete({ where: { id } });
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ message: 'Failed to delete organization', error: err });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete organization' });
   }
 };
